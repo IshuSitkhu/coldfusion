@@ -1,0 +1,286 @@
+body {
+    font-family: Arial, sans-serif;
+    background: #f4f6f9;
+    margin: 0;
+    padding-top: 50px;
+}
+
+.container {
+    width: 420px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+h2 {
+    text-align: center;
+}
+
+.input-group {
+    display: flex;
+    gap: 10px;
+}
+
+input {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    outline: none;
+}
+
+#addBtn {
+    background: #28a745;
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+#addBtn:hover {
+    opacity: 0.9;
+}
+
+ul {
+    list-style: none;
+    padding: 0;
+    margin-top: 20px;
+}
+
+li {
+    background: #f9f9f9;
+    margin-bottom: 10px;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.task-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+small {
+    font-size: 12px;
+    color: gray;
+}
+
+.actions {
+    display: flex;
+    gap: 5px;
+}
+
+button {
+    border: none;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+button:hover {
+    transform: scale(1.05);
+}
+
+.done {
+    background: #007bff;
+    color: white;
+}
+
+.undo {
+    background: orange;
+    color: white;
+}
+
+/* ACTION BUTTONS */
+.delete {
+    background: red;
+    color: white;
+}
+
+.edit {
+    background: #6c757d;
+    color: white;
+}
+
+.completed-text {
+    text-decoration: line-through;
+    color: green;
+}
+
+/* MODAL BACKGROUND */
+.modal {
+    display: none;
+    position: fixed;
+    inset: 0; /* shorthand for top/left/right/bottom */
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px); 
+
+    justify-content: center;
+    align-items: center;
+
+    z-index: 1000;
+}
+
+/* MODAL BOX */
+.modal-content {
+    background: #ffffff;
+    padding: 25px 20px;
+    border-radius: 14px;
+    width: 320px;
+    text-align: center;
+
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+
+    animation: scaleIn 0.25s ease;
+}
+
+/* TITLE */
+.modal-content h3 {
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px 14px;
+    margin: 15px 0;
+
+    border-radius: 10px;
+    border: 1px solid #ccc;
+
+    font-size: 14px;
+    outline: none;
+
+    background: #f9fafb;
+
+    transition: all 0.25s ease;
+}
+
+/* FOCUS STATE */
+.modal-content input:focus {
+    background: #ffffff;
+    border-color: #007bff;
+
+    box-shadow: 0 0 0 3px rgba(0,123,255,0.15);
+}
+
+/* PLACEHOLDER STYLE */
+.modal-content input::placeholder {
+    color: #aaa;
+    font-size: 13px;
+}
+
+/* BUTTON GROUP */
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+/* BUTTON BASE */
+.modal-actions button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+/* SAVE BUTTON */
+#saveEdit {
+    background: #28a745;
+    color: white;
+}
+
+#saveEdit:hover {
+    background: #218838;
+}
+
+/* CANCEL BUTTON */
+#cancelEdit {
+    background: #dc3545;
+    color: white;
+}
+
+#cancelEdit:hover {
+    background: #c82333;
+}
+
+/* ANIMATION */
+@keyframes scaleIn {
+    from {
+        opacity: 0;
+        transform: scale(0.85);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* LOADER */
+.loader {
+    display: none;
+    text-align: center;
+    margin-top: 10px;
+    font-size: 14px;
+    color: gray;
+}
+
+/* LOGIN PAGE */
+.login-container {
+    width: 350px;
+    margin: 80px auto;
+    background: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    text-align: center;
+}
+
+.login-container h2 {
+    margin-bottom: 20px;
+}
+
+.login-container input {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.login-container button {
+    width: 100%;
+    background: #007bff;
+    color: white;
+    padding: 10px;
+}
+
+/* DASHBOARD */
+.dashboard {
+    width: 600px;
+    margin: 40px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.dashboard h2 {
+    margin-bottom: 10px;
+}
+
+.dashboard a {
+    display: inline-block;
+    margin-right: 10px;
+    color: #007bff;
+    text-decoration: none;
+}
+
+.dashboard a:hover {
+    text-decoration: underline;
+}
