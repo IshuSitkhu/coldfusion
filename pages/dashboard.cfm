@@ -1,10 +1,14 @@
-<?php
-include '../auth/auth.cfm';
+<cfinclude template="../auth/auth.cfm">
 
-if ($_SESSION['role'] != 'admin') {
-    die("Access Denied");
-}
-?>
+<cfif session.role NEQ "admin">
+
+    <cfoutput>
+        Access Denied
+    </cfoutput>
+
+    <cfabort>
+
+</cfif>
 
 <!DOCTYPE html>
 <html>
@@ -60,7 +64,7 @@ if ($_SESSION['role'] != 'admin') {
         <div class="d-flex align-items-center gap-3">
 
             <span class="text-muted small">
-                Welcome, <strong class="text-dark"><?php echo $_SESSION['name']; ?></strong>
+                Welcome, <strong class="text-dark"><cfoutput>#session.name#</cfoutput></strong>
             </span>
 
             <button onclick="window.location='calendar.cfm'"
