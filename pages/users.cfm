@@ -51,7 +51,7 @@ if ($_SESSION['role'] != 'admin') {
 
 <script>
 function loadUsers() {
-    $.get("../api/get_all_users.cfm", function(data) {
+    $.get("../api/users/get_all_users.cfm", function(data) {
 
         let html = "";
 

@@ -62,7 +62,7 @@ $(document).ready(function () {
     // API CALL
     // =========================
 
-    let url = id ? "../api/update_user.cfm" : "../api/create_user.cfm";
+    let url = id ? "../api/users/update_user.cfm" : "../api/users/create_user.cfm";
 
     let data = { id, name, email };
 
@@ -70,42 +70,48 @@ $(document).ready(function () {
         data.password = password;
     }
 
-    $.ajax({
-        url: url,
-        method: "POST",
-        data: data,
+   $.ajax({
+    url: url,
+    method: "POST",
+    data: data,
 
-        success: function (res) {
+    success: function (res) {
 
-            try {
-                let response = typeof res === "string" ? JSON.parse(res) : res;
+        console.log("RAW RESPONSE:", res);
 
-                if (response.status === "success") {
+        let response;
 
-                    Swal.fire("Success", response.message, "success");
-
-                    $("#editId").val("");
-                    $("#name").val("");
-                    $("#email").val("");
-                    $("#password").val("");
-
-                    $("button[onclick='createUser()']").text("Submit");
-
-                    loadUsers();
-
-                } else {
-                    Swal.fire("Error", response.message, "error");
-                }
-
-            } catch (e) {
-                Swal.fire("Error", "Invalid server response", "error");
-            }
-        },
-
-        error: function () {
-            Swal.fire("Error", "Server not responding", "error");
+        try {
+            response = (typeof res === "string") ? JSON.parse(res.trim()) : res;
+        } catch (e) {
+            console.log("Parse Error:", res);
+            Swal.fire("Error", "Invalid JSON from server", "error");
+            return;
         }
-    });
+
+        if (response.STATUS === "success") {
+
+            Swal.fire("Success", response.MESSAGE, "success");
+
+            $("#editId").val("");
+            $("#name").val("");
+            $("#email").val("");
+            $("#password").val("");
+
+            $("button[onclick='createUser()']").text("Submit");
+
+            loadUsers();
+
+        } else {
+            Swal.fire("Error", response.MESSAGE || "Something went wrong", "error");
+        }
+    },
+
+    error: function (xhr) {
+        console.log("AJAX ERROR:", xhr.responseText);
+        Swal.fire("Error", "Server not responding", "error");
+    }
+});
 };
 
     // =========================
@@ -147,7 +153,7 @@ $(document).ready(function () {
     // =========================
     function loadUsers() {
 
-        $.get("../api/get_all_users.cfm", function (data) {
+        $.get("../api/users/get_all_users.cfm", function (data) {
 
             let html = "";
 
@@ -157,13 +163,13 @@ $(document).ready(function () {
                 <li class="list-group-item d-flex justify-content-between align-items-center">
 
                     <div>
-                        <strong>${u.name}</strong><br>
-                        <small class="text-muted">${u.email}</small>
+                        <strong>${u.NAME}</strong><br>
+                        <small class="text-muted">${u.EMAIL}</small>
                     </div>
 
                     <div>
-                        <span class="badge bg-${u.role === 'admin' ? 'danger' : 'primary'} me-2">
-                            ${u.role}
+                        <span class="badge bg-${u.ROLE === 'admin' ? 'danger' : 'primary'} me-2">
+                            ${u.ROLE}
                         </span>
 
                         <button class="btn btn-sm btn-warning me-1"
@@ -203,7 +209,7 @@ $(document).ready(function () {
             if (result.isConfirmed) {
 
                 $.ajax({
-                    url: "../api/delete_user.cfm",
+                    url: "../api/users/delete_user.cfm",
                     method: "POST",
                     data: { id: id },
                     dataType: "json",
@@ -347,7 +353,7 @@ $(document).ready(function () {
 
     function loadUsersDropdown() {
 
-        $.get("../api/get_all_users.cfm", function (users) {
+        $.get("../api/users/get_all_users.cfm", function (users) {
 
             let options = "";
 
@@ -377,7 +383,7 @@ window.openProjects = function () {
 // USERS DROPDOWN
 window.loadProjectUsers = function () {
 
-    $.get("../api/get_all_users.cfm", function (users) {
+    $.get("../api/users/get_all_users.cfm", function (users) {
 
         let options = "";
 
@@ -740,7 +746,7 @@ window.loadProjectTaskUsers = function (projectId) {
 
 window.loadProjectUsersDropdown = function () {
 
-    $.get("../api/get_all_users.cfm", function (users) {
+    $.get("../api/users/get_all_users.cfm", function (users) {
 
         let options = `<option value="">Select User</option>`;
 
@@ -855,7 +861,7 @@ window.addTaskToProject = function (projectId) {
 
 // window.loadTaskUsersDropdown = function () {
 
-//     $.get("../api/get_all_users.cfm", function (users) {
+//     $.get("../api/users/get_all_users.cfm", function (users) {
 
 //         let options = `<option value="">Assign to User</option>`;
 
