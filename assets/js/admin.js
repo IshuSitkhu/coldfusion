@@ -6,117 +6,160 @@ $(document).ready(function () {
     loadStats();
     loadUsersDropdown();
 
-    // =========================
     // CREATE / UPDATE USER
-    // =========================
-    window.createUser = function () {
+window.createUser = function () {
 
     let id = $("#editId").val();
+    console.log("EDIT ID:", $("#editId").val());
+  
+
     let name = $("#name").val().trim();
     let email = $("#email").val().trim();
     let password = $("#password").val();
 
-    // =========================
-    // VALIDATION
-    // =========================
-
     if (name.length < 3) {
-        Swal.fire("Error", "Name must be at least 3 characters", "error");
+
+        Swal.fire(
+            "Error",
+            "Name must be at least 3 characters",
+            "error"
+        );
+
         return;
     }
 
-    // Gmail only
     let emailPattern = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+
     if (!emailPattern.test(email)) {
+
         Swal.fire({
             icon: "error",
             title: "Invalid Email",
-            text: "Only Gmail addresses are allowed (example@gmail.com)"
+            text: "Only Gmail addresses are allowed"
         });
+
         return;
     }
 
-    // PASSWORD VALIDATION (only if entered)
     if (password !== "") {
 
         let errors = [];
 
-        if (password.length < 8) errors.push("Minimum 8 characters");
-        if (!/[A-Z]/.test(password)) errors.push("At least 1 uppercase letter (A-Z)");
-        if (!/[a-z]/.test(password)) errors.push("At least 1 lowercase letter (a-z)");
-        if (!/\d/.test(password)) errors.push("At least 1 number (0-9)");
-        if (!/[@$!%*?&#]/.test(password)) errors.push("At least 1 special character (@ $ ! % * ? & #)");
+        if (password.length < 8)
+            errors.push("Minimum 8 characters");
+
+        if (!/[A-Z]/.test(password))
+            errors.push("At least 1 uppercase letter");
+
+        if (!/[a-z]/.test(password))
+            errors.push("At least 1 lowercase letter");
+
+        if (!/\d/.test(password))
+            errors.push("At least 1 number");
+
+        if (!/[@$!%*?&#]/.test(password))
+            errors.push("At least 1 special character");
 
         if (errors.length > 0) {
+
             Swal.fire({
                 icon: "error",
                 title: "Weak Password",
-                html: "Password must include:<br><br>" +
-                    errors.map(e => `• ${e}`).join("<br>")
+                html: errors.map(e => `• ${e}`).join("<br>")
             });
+
             return;
         }
     }
 
-    // =========================
-    // API CALL
-    // =========================
+    let url = id
+        ? "../api/users/update_user.cfm"
+        : "../api/users/create_user.cfm";
 
-    let url = id ? "../api/users/update_user.cfm" : "../api/users/create_user.cfm";
+    $.ajax({
 
-    let data = { id, name, email };
+        url: url,
+        method: "POST",
 
-    if (password !== "") {
-        data.password = password;
-    }
+        data: {
+            id: id,
+            name: name,
+            email: email,
+            password: password
+        },
 
-   $.ajax({
-    url: url,
-    method: "POST",
-    data: data,
+        success: function (res) {
 
-    success: function (res) {
+            console.log("RAW RESPONSE:", res);
 
-        console.log("RAW RESPONSE:", res);
+            let response;
 
-        let response;
+            try {
 
-        try {
-            response = (typeof res === "string") ? JSON.parse(res.trim()) : res;
-        } catch (e) {
-            console.log("Parse Error:", res);
-            Swal.fire("Error", "Invalid JSON from server", "error");
-            return;
+                response = typeof res === "string"
+                    ? JSON.parse(res)
+                    : res;
+
+            } catch (e) {
+
+                console.log("JSON PARSE ERROR:", e);
+
+                Swal.fire(
+                    "Error",
+                    "Invalid JSON response",
+                    "error"
+                );
+
+                return;
+            }
+
+            if (response.STATUS === "success") {
+
+                Swal.fire(
+                    "Success",
+                    response.MESSAGE,
+                    "success"
+                );
+
+                $("#editId").val("");
+                $("#name").val("");
+                $("#email").val("");
+                $("#password").val("");
+
+                $("button[onclick='createUser()']")
+                    .text("Submit");
+
+                loadUsers();
+
+            } else {
+
+                Swal.fire(
+                    "Error",
+                    response.MESSAGE,
+                    "error"
+                );
+
+            }
+
+        },
+
+        error: function (xhr) {
+
+            console.log("AJAX ERROR:", xhr.responseText);
+
+            Swal.fire(
+                "Error",
+                "Server not responding",
+                "error"
+            );
+
         }
 
-        if (response.STATUS === "success") {
+    });
 
-            Swal.fire("Success", response.MESSAGE, "success");
-
-            $("#editId").val("");
-            $("#name").val("");
-            $("#email").val("");
-            $("#password").val("");
-
-            $("button[onclick='createUser()']").text("Submit");
-
-            loadUsers();
-
-        } else {
-            Swal.fire("Error", response.MESSAGE || "Something went wrong", "error");
-        }
-    },
-
-    error: function (xhr) {
-        console.log("AJAX ERROR:", xhr.responseText);
-        Swal.fire("Error", "Server not responding", "error");
-    }
-});
 };
 
-    // =========================
     // SECTION CONTROL
-    // =========================
     window.openCreate = function () {
         $(".section").hide();
         $("#create").show();
@@ -134,98 +177,109 @@ $(document).ready(function () {
         loadTasks();
     };
 
-    // =========================
     // EDIT USER
-    // =========================
-    window.editUser = function (id, name, email) {
+window.editUser = function (id, name, email) {
 
-        openCreate();
+    console.log("EDIT CLICKED ID:", id);
 
-        $("#editId").val(id);
-        $("#name").val(name);
-        $("#email").val(email);
+    openCreate();
 
-        $("button[onclick='createUser()']").text("Update User");
-    };
+    $("#editId").val(id);
 
-    // =========================
+    console.log("SET EDIT ID:", $("#editId").val());
+
+    $("#name").val(name);
+    $("#email").val(email);
+    $("#password").val("");
+
+    $("button[onclick='createUser()']")
+        .text("Update User");
+};
+
     // LOAD USERS
-    // =========================
     function loadUsers() {
 
-        $.get("../api/users/get_all_users.cfm", function (data) {
+    $.get("../api/users/get_all_users.cfm", function (data) {
 
-            let html = "";
+        let html = "";
 
-            data.forEach(function (u) {
+        data.forEach(function (u) {
 
-                html += `
-                <li class="list-group-item d-flex justify-content-between align-items-center">
+            html += `
+            <li class="list-group-item d-flex justify-content-between align-items-center">
 
-                    <div>
-                        <strong>${u.NAME}</strong><br>
-                        <small class="text-muted">${u.EMAIL}</small>
-                    </div>
+                <div>
+                    <strong>${u.NAME}</strong><br>
+                    <small class="text-muted">${u.EMAIL}</small>
+                </div>
 
-                    <div>
-                        <span class="badge bg-${u.ROLE === 'admin' ? 'danger' : 'primary'} me-2">
-                            ${u.ROLE}
-                        </span>
+                <div>
+                    <span class="badge bg-${u.ROLE === 'admin' ? 'danger' : 'primary'} me-2">
+                        ${u.ROLE}
+                    </span>
 
-                        <button class="btn btn-sm btn-warning me-1"
-                            onclick="editUser(${u.id}, \`${u.name}\`, \`${u.email}\`)">
-                            Edit
-                        </button>
+                    <button class="btn btn-sm btn-warning me-1"
+                        onclick="editUser(${u.ID}, \`${u.NAME}\`, \`${u.EMAIL}\`)">
+                        Edit
+                    </button>
 
-                        <button class="btn btn-sm btn-danger"
-                            onclick="deleteUser(${u.id})">
-                            Delete
-                        </button>
-                    </div>
+                    <button class="btn btn-sm btn-danger"
+                        onclick="deleteUser(${u.ID})">
+                        Delete
+                    </button>
+                </div>
 
-                </li>
-                `;
-            });
-
-            $("#userList").html(html);
-
-        }, "json");
-    }
-
-    // =========================
-    // DELETE USER
-    // =========================
-    window.deleteUser = function (id) {
-
-        Swal.fire({
-            title: "Are you sure?",
-            text: "This user will be permanently deleted!",
-            icon: "warning",
-            showCancelButton: true,
-            confirmButtonColor: "#d33",
-            confirmButtonText: "Yes, delete it!"
-        }).then((result) => {
-
-            if (result.isConfirmed) {
-
-                $.ajax({
-                    url: "../api/users/delete_user.cfm",
-                    method: "POST",
-                    data: { id: id },
-                    dataType: "json",
-                    success: function (res) {
-
-                        if (res.status === "success") {
-                            Swal.fire("Deleted!", "User removed", "success");
-                            loadUsers();
-                        } else {
-                            Swal.fire("Error", "Delete failed", "error");
-                        }
-                    }
-                });
-            }
+            </li>
+            `;
         });
-    };
+
+        $("#userList").html(html);
+
+    }, "json");
+}
+
+    // DELETE USER
+window.deleteUser = function (id) {
+
+    Swal.fire({
+        title: "Are you sure?",
+        text: "This user will be permanently deleted!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+
+        if (result.isConfirmed) {
+
+            $.ajax({
+    url: "../api/users/delete_user.cfm",
+    method: "POST",
+    data: "id=" + id,
+    contentType: "application/x-www-form-urlencoded; charset=UTF-8",
+    dataType: "json",
+
+    success: function (res) {
+
+        console.log("DELETE RESPONSE:", res);
+
+        if (res.STATUS === "success") {
+            Swal.fire("Deleted!", "User removed", "success");
+            loadUsers();
+        } else {
+            Swal.fire("Error", res.MESSAGE, "error");
+        }
+    },
+
+    error: function (xhr) {
+        console.log("RAW ERROR:", xhr.responseText);
+        Swal.fire("Error", "Server error", "error");
+    }
+});
+
+        }
+    });
+};
 
     // =========================
     // CREATE TASK
@@ -358,7 +412,7 @@ $(document).ready(function () {
             let options = "";
 
             users.forEach(function (u) {
-                options += `<option value="${u.id}">${u.name}</option>`;
+                options += `<option value="${u.id}">${u.NAME}</option>`;
             });
 
             $("#assignUser").html(options);
@@ -388,7 +442,7 @@ window.loadProjectUsers = function () {
         let options = "";
 
         users.forEach(u => {
-            options += `<option value="${u.id}">${u.name}</option>`;
+            options += `<option value="${u.id}">${u.NAME}</option>`;
         });
 
         $("#projectUsers").html(options);
@@ -540,7 +594,7 @@ window.viewProject = function (id) {
 
         ${(data.users || []).map(u => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                ${u.name}
+                ${u.NAME}
 
                 <button class="btn btn-sm btn-outline-danger"
                     onclick="removeUserFromProject(${data.project.id}, ${u.id})">
@@ -730,7 +784,7 @@ window.loadProjectTaskUsers = function (projectId) {
         if (Array.isArray(users) && users.length > 0) {
 
             users.forEach(u => {
-                options += `<option value="${u.id}">${u.name}</option>`;
+                options += `<option value="${u.id}">${u.NAME}</option>`;
             });
 
         } else {
@@ -753,9 +807,9 @@ window.loadProjectUsersDropdown = function () {
         users.forEach(function (u) {
 
             //SKIP ADMIN USERS
-            if (u.role === "admin") return;
+            if (u.ROLE === "admin") return;
 
-            options += `<option value="${u.id}">${u.name}</option>`;
+            options += `<option value="${u.id}">${u.NAME}</option>`;
         });
 
         $("#newUser").html(options);
@@ -868,9 +922,9 @@ window.addTaskToProject = function (projectId) {
 //         users.forEach(u => {
 
 //             // skip admin
-//             if (u.role === "admin") return;
+//             if (u.ROLE === "admin") return;
 
-//             options += `<option value="${u.id}">${u.name}</option>`;
+//             options += `<option value="${u.id}">${u.NAME}</option>`;
 //         });
 
 //         $("#assignTaskUser").html(options);
