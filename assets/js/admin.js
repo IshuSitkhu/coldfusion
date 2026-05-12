@@ -452,7 +452,7 @@ window.loadProjectUsers = function () {
 
 window.loadProjects = function () {
 
-    $.get("../api/get_projects.cfm", function (data) {
+    $.get("../api/projects/get_projects.cfm", function (data) {
 
         let html = "";
 
@@ -560,7 +560,7 @@ window.viewProject = function (id) {
 
     console.log("View clicked, ID:", id);
 
-    $.get("../api/get_project_details.cfm?id=" + id, function (data) {
+    $.get("../api/projects/get_project_details.cfm?id=" + id, function (data) {
 
         console.log("API response:", data);
 
@@ -934,7 +934,7 @@ window.addTaskToProject = function (projectId) {
 
 window.editProject = function (id) {
 
-    $.get("../api/get_project_details.cfm?id=" + id, function (data) {
+    $.get("../api/projects/get_project_details.cfm?id=" + id, function (data) {
 
         $("#projectForm").show();
         $("#projectList").show();
