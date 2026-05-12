@@ -33,7 +33,6 @@
 
 </cfif>
 
-<!--- SIMPLE PASSWORD CHECK FOR NOW --->
 
 <cfif form.password NEQ "admin">
 
@@ -48,13 +47,11 @@
 
 </cfif>
 
-<!--- SESSION --->
 
 <cfset session.user_id = getUser.id>
 <cfset session.name = getUser.name>
 <cfset session.role = getUser.role>
 
-<!--- ROLE REDIRECT --->
 
 <cfif getUser.role EQ "admin">
 
