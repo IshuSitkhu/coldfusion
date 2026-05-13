@@ -1,24 +1,36 @@
 <cfsetting showdebugoutput="false">
-<cfcontent type="application/json; charset=utf-8">
+<cfcontent type="application/json; charset=utf-8" reset="yes">
 <cfheader name="Cache-Control" value="no-store">
 
 <cftry>
 
-<cfset id = structKeyExists(url, "id") ? val(url.id) : 0>
+<cfset id = 0>
+
+<cfif structKeyExists(url, "id") AND isNumeric(url.id)>
+    <cfset id = val(url.id)>
+</cfif>
 
 <cfif id EQ 0>
     <cfoutput>#serializeJSON({
-        "status"="error",
-        "message"="Invalid ID"
+        "status" = "error",
+        "message" = "Invalid ID"
     })#</cfoutput>
     <cfabort>
 </cfif>
 
 <cfquery name="qProject" datasource="todo">
-    SELECT *
+    SELECT id, title, description, created_at
     FROM projects
     WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
 </cfquery>
+
+<cfif qProject.recordCount EQ 0>
+    <cfoutput>#serializeJSON({
+        "status" = "error",
+        "message" = "Project not found"
+    })#</cfoutput>
+    <cfabort>
+</cfif>
 
 <cfquery name="qUsers" datasource="todo">
     SELECT u.id, u.name
@@ -28,68 +40,48 @@
 </cfquery>
 
 <cfquery name="qTasks" datasource="todo">
-    SELECT
-        t.id,
-        t.task,
-        t.status,
-        t.created_at,
-        u.name AS assigned_user,
-        a.name AS assigned_by
+    SELECT t.id, t.task, t.status, t.created_at,
+           u.name AS assigned_user
     FROM project_tasks t
     LEFT JOIN users u ON u.id = t.assigned_user_id
-    LEFT JOIN users a ON a.id = t.assigned_by
     WHERE t.project_id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
 </cfquery>
 
 <cfset projectData = structNew()>
 
-<!-- project -->
-<cfif qProject.recordCount GT 0>
-    <cfset projectData.project = {
-        "id" = qProject.id,
-        "title" = qProject.title,
-        "description" = qProject.description,
-        "created_at" = qProject.created_at
-    }>
-<cfelse>
-    <cfset projectData.project = structNew()>
-</cfif>
+<cfset projectData.project = {
+    "id" = qProject.ID,
+    "title" = qProject.TITLE,
+    "description" = qProject.DESCRIPTION,
+    "created_at" = qProject.CREATED_AT
+}>
 
-<!-- users -->
-<cfset projectData.users = arrayNew(1)>
-
+<cfset projectData.users = []>
 <cfloop query="qUsers">
     <cfset arrayAppend(projectData.users, {
-        "id" = qUsers.id,
-        "name" = qUsers.name
+        "id" = qUsers.ID,
+        "name" = qUsers.NAME
     })>
 </cfloop>
 
-<!-- tasks -->
-<cfset projectData.tasks = arrayNew(1)>
-
+<cfset projectData.tasks = []>
 <cfloop query="qTasks">
     <cfset arrayAppend(projectData.tasks, {
-        "id" = qTasks.id,
-        "task" = qTasks.task,
-        "status" = qTasks.status,
-        "created_at" = qTasks.created_at,
-        "assigned_user" = qTasks.assigned_user,
-        "assigned_by" = qTasks.assigned_by
+        "id" = qTasks.ID,
+        "task" = qTasks.TASK,
+        "status" = qTasks.STATUS,
+        "created_at" = qTasks.CREATED_AT,
+        "assigned_user" = qTasks.ASSIGNED_USER
     })>
 </cfloop>
 
-<cfoutput>
-#serializeJSON(projectData)#
-</cfoutput>
+<cfoutput>#serializeJSON(projectData)#</cfoutput>
 
 <cfcatch>
-    <cfoutput>
-        #serializeJSON({
-            "status"="error",
-            "message"=cfcatch.message
-        })#
-    </cfoutput>
+    <cfoutput>#serializeJSON({
+        "status" = "error",
+        "message" = cfcatch.message
+    })#</cfoutput>
 </cfcatch>
 
 </cftry>

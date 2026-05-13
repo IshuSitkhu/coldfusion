@@ -467,8 +467,8 @@ window.loadProjects = function () {
                 </div>
 
                 <div>
-                    <button class="btn btn-info btn-sm me-1 viewBtn" data-id="${p.id}">View</button>
-                    <button class="btn btn-warning btn-sm me-1" onclick="window.editProject(${p.id})">Edit</button>
+                    <button class="btn btn-info btn-sm me-1 viewBtn" data-id="${p.ID}">View</button>
+                    <button class="btn btn-warning btn-sm me-1" onclick="window.editProject(${p.ID})">Edit</button>
                     <button class="btn btn-danger btn-sm" onclick="window.deleteProject(${p.ID})">Delete</button>
                 </div>
 
@@ -493,6 +493,7 @@ window.createProject = function () {
     let description = $("#projectDesc").val().trim();
     let users = $("#projectUsers").val();
 
+    // validation
     if (title === "") {
         Swal.fire("Error", "Project title is required", "error");
         return;
@@ -503,15 +504,20 @@ window.createProject = function () {
         return;
     }
 
-    let url = window.editProjectId
-        ? "../api/update_project.cfm"
+    let isUpdate = !!window.editProjectId;
+
+    let url = isUpdate
+        ? "../api/projects/update_project.cfm"
         : "../api/projects/create_project.cfm";
 
     $.ajax({
         url: url,
         method: "POST",
+        dataType: "json",
+        traditional: true,
+
         data: {
-            id: window.editProjectId,
+            id: window.editProjectId || "",
             title: title,
             description: description,
             users: users
@@ -519,21 +525,17 @@ window.createProject = function () {
 
         success: function (res) {
 
-            console.log("RAW RESPONSE:", res);
+            console.log("RESPONSE:", res);
 
-            let response;
+            // IMPORTANT: make it safe (CF may send STATUS or status)
+            let status = res.STATUS || res.status;
+            let message = res.MESSAGE || res.message;
 
-            try {
-                response = (typeof res === "string") ? JSON.parse(res) : res;
-            } catch (e) {
-                Swal.fire("Error", "Invalid server response", "error");
-                return;
-            }
+            if (status === "success") {
 
-            if (response.STATUS === "success") {
+                Swal.fire("Success", message, "success");
 
-                Swal.fire("Success", response.MESSAGE, "success");
-
+                // reset form
                 $("#projectTitle").val("");
                 $("#projectDesc").val("");
                 $("#projectUsers").val([]);
@@ -548,7 +550,7 @@ window.createProject = function () {
                     .addClass("btn-warning text-white");
 
             } else {
-                Swal.fire("Error", response.MESSAGE, "error");
+                Swal.fire("Error", message, "error");
             }
         },
 
@@ -577,7 +579,7 @@ window.viewProject = function (id) {
         $("#projectView").show();
 
         // STORE TASKS FOR PAGINATION
-        allTasks = data.tasks || [];
+        allTasks = data.TASKS || [];
         currentPage = 1;
 
         $("#projectView").html(`
@@ -585,8 +587,8 @@ window.viewProject = function (id) {
 
     <!-- ================= PROJECT HEADER ================= -->
     <div class="mb-2">
-        <h4 class="mb-1">${data.project.title}</h4>
-        <p class="text-muted mb-0">${data.project.description}</p>
+        <h4 class="mb-1">${data.PROJECT.title}</h4>
+        <p class="text-muted mb-0">${data.PROJECT.description}</p>
     </div>
 
     <hr>
@@ -600,12 +602,12 @@ window.viewProject = function (id) {
 
     <ul class="list-group">
 
-        ${(data.users || []).map(u => `
+        ${(data.USERS || []).map(u => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
                 ${u.NAME}
 
                 <button class="btn btn-sm btn-outline-danger"
-                    onclick="removeUserFromProject(${data.project.id}, ${u.id})">
+                    onclick="removeUserFromProject(${data.PROJECT.id}, ${u.id})">
                     Remove
                 </button>
             </li>
@@ -625,7 +627,7 @@ window.viewProject = function (id) {
             </select>
 
             <button class="btn btn-primary btn-sm w-auto"
-                onclick="addUserToProject(${data.project.id})">
+                onclick="addUserToProject(${data.PROJECT.id})">
                 + Add Member
             </button>
 
@@ -666,7 +668,7 @@ window.viewProject = function (id) {
             </select>
 
             <button class="btn btn-success btn-sm w-auto"
-                onclick="addTaskToProject(${data.project.id})">
+                onclick="addTaskToProject(${data.PROJECT.id})">
                 + Add Task
             </button>
 
@@ -687,7 +689,7 @@ window.viewProject = function (id) {
 
         // reload dropdowns
         window.loadProjectUsersDropdown();
-        window.currentProjectId = data.project.id;
+        window.currentProjectId = data.PROJECT.id;
         window.loadProjectTaskUsers(window.currentProjectId);
 
         // render first page
@@ -942,27 +944,38 @@ window.addTaskToProject = function (projectId) {
 
 window.editProject = function (id) {
 
+    if (!id) {
+        Swal.fire("Error", "Invalid ID", "error");
+        return;
+    }
+
     $.get("../api/projects/get_project_details.cfm?id=" + id, function (data) {
 
-        $("#projectForm").show();
-        $("#projectList").show();
-        $("#projectView").hide();
+        console.log("EDIT API:", data);
 
-        $("#projectTitle").val(data.project.title);
-        $("#projectDesc").val(data.project.description);
+        // ❗ SAFE CHECK (VERY IMPORTANT)
+        if (!data.PROJECT) {
+            Swal.fire("Error", data.message || "Project not found", "error");
+            return;
+        }
 
-        let userIds = data.users.map(u => u.id);
+        $("#projectTitle").val(data.PROJECT.title || "");
+        $("#projectDesc").val(data.PROJECT.description || "");
+
+        let userIds = (data.USERS || []).map(u => u.id);
         $("#projectUsers").val(userIds);
 
         window.editProjectId = id;
 
-        
         $("#projectBtn")
             .text("Update Project")
             .removeClass("btn-warning")
             .addClass("btn-success");
 
-    }, "json");
+    }, "json").fail(function (err) {
+        console.log(err.responseText);
+        Swal.fire("Error", "Server error", "error");
+    });
 };
 
 window.deleteProjectTask = function (id) {
