@@ -493,10 +493,6 @@ window.createProject = function () {
     let description = $("#projectDesc").val().trim();
     let users = $("#projectUsers").val();
 
-    // =========================
-    // VALIDATION
-    // =========================
-
     if (title === "") {
         Swal.fire("Error", "Project title is required", "error");
         return;
@@ -507,48 +503,60 @@ window.createProject = function () {
         return;
     }
 
-    // if (description === "") {
-    //     Swal.fire("Error", "Project description is required", "error");
-    //     return;
-    // }
-
-
-    // =========================
-    // API CALL
-    // =========================
-
     let url = window.editProjectId
         ? "../api/update_project.cfm"
-        : "../api/create_project.cfm";
+        : "../api/projects/create_project.cfm";
 
-    $.post(url, {
-        id: window.editProjectId,
-        title,
-        description,
-        users
-    }, function (res) {
+    $.ajax({
+        url: url,
+        method: "POST",
+        data: {
+            id: window.editProjectId,
+            title: title,
+            description: description,
+            users: users
+        },
 
-        if (res.status === "success") {
+        success: function (res) {
 
-    Swal.fire("Success", res.message, "success");
+            console.log("RAW RESPONSE:", res);
 
-    $("#projectTitle").val("");
-    $("#projectDesc").val("");
-    $("#projectUsers").val([]);
+            let response;
 
-    window.editProjectId = null;
+            try {
+                response = (typeof res === "string") ? JSON.parse(res) : res;
+            } catch (e) {
+                Swal.fire("Error", "Invalid server response", "error");
+                return;
+            }
 
-    window.loadProjects();
+            if (response.STATUS === "success") {
 
-    $("#projectBtn")
-        .text("Save Project")
-        .removeClass("btn-success")
-        .addClass("btn-warning text-white");
-}else {
-            Swal.fire("Error", res.message || "Something went wrong", "error");
+                Swal.fire("Success", response.MESSAGE, "success");
+
+                $("#projectTitle").val("");
+                $("#projectDesc").val("");
+                $("#projectUsers").val([]);
+
+                window.editProjectId = null;
+
+                window.loadProjects();
+
+                $("#projectBtn")
+                    .text("Save Project")
+                    .removeClass("btn-success")
+                    .addClass("btn-warning text-white");
+
+            } else {
+                Swal.fire("Error", response.MESSAGE, "error");
+            }
+        },
+
+        error: function (xhr) {
+            console.log("SERVER ERROR:", xhr.responseText);
+            Swal.fire("Error", "Server error", "error");
         }
-
-    }, "json");
+    });
 };
 
 let allTasks = [];
