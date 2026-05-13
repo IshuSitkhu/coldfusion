@@ -62,7 +62,7 @@ $(document).ready(function () {
                 let options = "";
 
                 users.forEach(function (u) {
-                    options += `<option value="${u.id}">${u.name}</option>`;
+                    options += `<option value="${u.ID}">${u.NAME}</option>`;
                 });
 
                 $("#assignUser").html(options);

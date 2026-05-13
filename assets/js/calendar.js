@@ -45,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
         );
 
         let options = availableUsers.map(u => `
-            <option value="${u.id}">
+            <option value="${u.ID}">
                 ${u.name}
             </option>
         `).join('');

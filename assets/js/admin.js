@@ -412,7 +412,7 @@ window.deleteUser = function (id) {
             let options = "";
 
             users.forEach(function (u) {
-                options += `<option value="${u.id}">${u.NAME}</option>`;
+                options += `<option value="${u.ID}">${u.NAME}</option>`;
             });
 
             $("#assignUser").html(options);
@@ -442,7 +442,7 @@ window.loadProjectUsers = function () {
         let options = "";
 
         users.forEach(u => {
-            options += `<option value="${u.id}">${u.NAME}</option>`;
+            options += `<option value="${u.ID}">${u.NAME}</option>`;
         });
 
         $("#projectUsers").html(options);
@@ -604,7 +604,7 @@ window.viewProject = function (id) {
 
         ${(data.USERS || []).map(u => `
             <li class="list-group-item d-flex justify-content-between align-items-center">
-                ${u.NAME}
+                ${u.name}
 
                 <button class="btn btn-sm btn-outline-danger"
                     onclick="removeUserFromProject(${data.PROJECT.id}, ${u.id})">
@@ -690,6 +690,7 @@ window.viewProject = function (id) {
         // reload dropdowns
         window.loadProjectUsersDropdown();
         window.currentProjectId = data.PROJECT.id;
+        window.currentProjectUsers = data.USERS || [];
         window.loadProjectTaskUsers(window.currentProjectId);
 
         // render first page
@@ -785,7 +786,7 @@ window.loadProjectTaskUsers = function (projectId) {
         return;
     }
 
-    $.get("../api/get_project_users.cfm?project_id=" + projectId, function (users) {
+    $.get("../api/projects/get_project_users.cfm?project_id=" + projectId, function (users) {
 
         console.log("Project Users API:", users);
 
@@ -794,7 +795,7 @@ window.loadProjectTaskUsers = function (projectId) {
         if (Array.isArray(users) && users.length > 0) {
 
             users.forEach(u => {
-                options += `<option value="${u.id}">${u.NAME}</option>`;
+                options += `<option value="${u.ID}">${u.NAME}</option>`;
             });
 
         } else {
@@ -814,12 +815,15 @@ window.loadProjectUsersDropdown = function () {
 
         let options = `<option value="">Select User</option>`;
 
+        let assignedUsers = (window.currentProjectUsers || []).map(u => Number(u.ID));
+
         users.forEach(function (u) {
 
-            //SKIP ADMIN USERS
             if (u.ROLE === "admin") return;
 
-            options += `<option value="${u.id}">${u.NAME}</option>`;
+            if (assignedUsers.includes(Number(u.ID))) return;
+
+            options += `<option value="${u.ID}">${u.NAME}</option>`;
         });
 
         $("#newUser").html(options);
@@ -836,20 +840,20 @@ window.addUserToProject = function (projectId) {
         return;
     }
 
-    $.post("../api/add_user_to_project.cfm", {
+    $.post("../api/projects/add_user_to_project.cfm", {
         project_id: projectId,
         user_id: userId
     }, function (res) {
 
-        if (res.status === "success") {
+        if (res.STATUS === "success") {
 
-            Swal.fire("Success", res.message, "success");
+            Swal.fire("Success", res.MESSAGE, "success");
 
             // reload view
             window.viewProject(projectId);
 
         } else {
-            Swal.fire("Error", res.message, "error");
+            Swal.fire("Error", res.MESSAGE, "error");
         }
 
     }, "json");
@@ -857,14 +861,14 @@ window.addUserToProject = function (projectId) {
 
 window.removeUserFromProject = function(projectId, userId) {
 
-    $.post("../api/remove_user_from_project.cfm", {
+    $.post("../api/projects/remove_user_from_project.cfm", {
         project_id: projectId,
         user_id: userId
     }, function(res) {
 
-        if (res.status === "success") {
+        if (res.STATUS === "success") {
 
-            Swal.fire("Removed", res.message, "success");
+            Swal.fire("Removed", res.MESSAGE, "success");
 
             // reload same project view
             window.viewProject(projectId);
@@ -934,7 +938,7 @@ window.addTaskToProject = function (projectId) {
 //             // skip admin
 //             if (u.ROLE === "admin") return;
 
-//             options += `<option value="${u.id}">${u.NAME}</option>`;
+//             options += `<option value="${u.ID}">${u.NAME}</option>`;
 //         });
 
 //         $("#assignTaskUser").html(options);
@@ -1110,7 +1114,7 @@ new Chart(ctx, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false, // 🔥 CRITICAL
+        maintainAspectRatio: false, 
         plugins: {
             legend: {
                 display: false // removes big label area
