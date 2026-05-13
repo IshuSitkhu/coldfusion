@@ -6,20 +6,17 @@
 
 <cftry>
 
-    <!--- OPTIONAL: security check --->
     <cfif NOT structKeyExists(session, "role")>
         <cfoutput>#serializeJSON([])#</cfoutput>
         <cfabort>
     </cfif>
 
-    <!--- GET PROJECTS --->
     <cfquery name="qProjects" datasource="todo">
         SELECT *
         FROM projects
         ORDER BY id DESC
     </cfquery>
 
-    <!--- LOOP DATA --->
     <cfloop query="qProjects">
 
         <cfset project = structNew()>

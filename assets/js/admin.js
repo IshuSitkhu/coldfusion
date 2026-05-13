@@ -462,8 +462,8 @@ window.loadProjects = function () {
             <li class="list-group-item d-flex justify-content-between">
 
                 <div>
-                    <strong>${p.title}</strong><br>
-                    <small>${p.description}</small>
+                    <strong>${p.TITLE}</strong><br>
+                    <small>${p.DESCRIPTION}</small>
                 </div>
 
                 <div>
