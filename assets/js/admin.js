@@ -469,7 +469,7 @@ window.loadProjects = function () {
                 <div>
                     <button class="btn btn-info btn-sm me-1 viewBtn" data-id="${p.id}">View</button>
                     <button class="btn btn-warning btn-sm me-1" onclick="window.editProject(${p.id})">Edit</button>
-                    <button class="btn btn-danger btn-sm" onclick="window.deleteProject(${p.id})">Delete</button>
+                    <button class="btn btn-danger btn-sm" onclick="window.deleteProject(${p.ID})">Delete</button>
                 </div>
 
             </li>`;
@@ -979,7 +979,7 @@ window.deleteProjectTask = function (id) {
                 id: id
             }, function (res) {
 
-                if (res.status === "success") {
+                if (res.STATUS === "success") {
                     Swal.fire("Deleted", "", "success");
 
                     window.viewProject(window.currentProjectId);
@@ -1016,20 +1016,43 @@ window.updateTaskStatus = function (id, status) {
 // DELETE
 window.deleteProject = function (id) {
 
+    console.log("DELETE PROJECT ID:", id);
+
+    if (!id || id === "undefined" || id === null) {
+        Swal.fire("Error", "Project ID missing in JS", "error");
+        return;
+    }
+
     Swal.fire({
         title: "Delete?",
         icon: "warning",
         showCancelButton: true
     }).then(result => {
 
-        if (result.isConfirmed) {
+        if (!result.isConfirmed) return;
 
-            $.post("../api/delete_project.cfm", { id }, function () {
+        $.ajax({
+            url: "../api/projects/delete_project.cfm",
+            type: "POST",
+            data: { id: id },
+            dataType: "json",
 
-                window.loadProjects();
+            success: function (res) {
+                console.log("DELETE RESPONSE:", res);
 
-            }, "json");
-        }
+                if (res.STATUS === "success") {
+                    Swal.fire("Deleted!", res.MESSAGE, "success");
+                    window.loadProjects();
+                } else {
+                    Swal.fire("Error", res.MESSAGE, "error");
+                }
+            },
+
+            error: function (xhr) {
+                console.log("RAW ERROR:", xhr.responseText);
+                Swal.fire("Error", "Server error", "error");
+            }
+        });
     });
 };
 
