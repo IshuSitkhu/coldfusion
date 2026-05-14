@@ -687,14 +687,14 @@ window.viewProject = function (id) {
 </div>
 `);
 
-        // reload dropdowns
-        window.loadProjectUsersDropdown();
-        window.currentProjectId = data.PROJECT.id;
-        window.currentProjectUsers = data.USERS || [];
-        window.loadProjectTaskUsers(window.currentProjectId);
-
-        // render first page
         renderTasks();
+
+window.currentProjectId = data.PROJECT.id;
+window.currentProjectUsers = data.USERS || [];
+
+window.loadProjectTaskUsers(window.currentProjectId);
+
+window.loadProjectUsersDropdown();
 
     }).fail(function (err) {
         console.error("API ERROR:", err);
@@ -795,7 +795,7 @@ window.loadProjectTaskUsers = function (projectId) {
         if (Array.isArray(users) && users.length > 0) {
 
             users.forEach(u => {
-                options += `<option value="${u.ID}">${u.NAME}</option>`;
+                options += `<option value="${u.id || u.ID}">${u.name || u.NAME}</option>`;
             });
 
         } else {
@@ -811,14 +811,15 @@ window.loadProjectTaskUsers = function (projectId) {
 
 window.loadProjectUsersDropdown = function () {
 
+   
     $.get("../api/users/get_all_users.cfm", function (users) {
-
+         
         let options = `<option value="">Select User</option>`;
 
         let assignedUsers = (window.currentProjectUsers || []).map(u => Number(u.ID));
 
         users.forEach(function (u) {
-
+            console.log("USER OBJECT:", u);
             if (u.ROLE === "admin") return;
 
             if (assignedUsers.includes(Number(u.ID))) return;
@@ -883,7 +884,9 @@ window.removeUserFromProject = function(projectId, userId) {
 window.addTaskToProject = function (projectId) {
 
     let task = $("#newTask").val();
-    let userId = $("#assignTaskUser").val();
+    let userId = $("#assignTaskUser").find(":selected").val();
+    console.log("DROPDOWN HTML:", $("#assignTaskUser").html());
+console.log("SELECTED VALUE:", $("#assignTaskUser").val());
 
     console.log("RAW TASK:", task);
     console.log("TRIM TASK:", task.trim());
@@ -901,7 +904,7 @@ window.addTaskToProject = function (projectId) {
         return;
     }
 
-    $.post("../api/add_task_to_project.cfm", {
+    $.post("../api/projects/add_task_to_project.cfm", {
     project_id: projectId,
     task: task,
     assigned_user_id: userId
@@ -909,8 +912,8 @@ window.addTaskToProject = function (projectId) {
 
     console.log("API RESPONSE:", res);
 
-    if (res.status === "success") {
-        Swal.fire("Success", res.message, "success");
+    if (res.STATUS === "success") {
+        Swal.fire("Success", res.MESSAGE, "success");
 
         $("#newTask").val("");
         $("#assignTaskUser").val("");
@@ -918,7 +921,7 @@ window.addTaskToProject = function (projectId) {
         window.viewProject(projectId);
 
     } else {
-        Swal.fire("Error", res.message, "error");
+        Swal.fire("Error", res.MESSAGE, "error");
     }
 
 }, "json").fail(function (err) {
@@ -992,7 +995,7 @@ window.deleteProjectTask = function (id) {
 
         if (result.isConfirmed) {
 
-            $.post("../api/delete_project_task.cfm", {
+            $.post("../api/projects/delete_project_task.cfm", {
                 id: id
             }, function (res) {
 
