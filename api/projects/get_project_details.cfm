@@ -41,6 +41,7 @@
 
 <cfquery name="qTasks" datasource="todo">
     SELECT t.id, t.task, t.status, t.created_at,
+            t.assigned_user_id,
            u.name AS assigned_user
     FROM project_tasks t
     LEFT JOIN users u ON u.id = t.assigned_user_id

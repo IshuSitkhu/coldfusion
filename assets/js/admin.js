@@ -667,10 +667,11 @@ window.viewProject = function (id) {
                 <option value="">Assign to user</option>
             </select>
 
-            <button class="btn btn-success btn-sm w-auto"
-                onclick="addTaskToProject(${data.PROJECT.id})">
-                + Add Task
-            </button>
+            <button id="taskSubmitBtn"
+    class="btn btn-success btn-sm w-auto"
+    onclick="saveProjectTask(${data.PROJECT.id})">
+    + Add Task
+</button>
 
         </div>
 
@@ -928,6 +929,71 @@ console.log("SELECTED VALUE:", $("#assignTaskUser").val());
 
     console.error("AJAX ERROR:", err.responseText); 
 });
+};
+
+window.editProjectTask = function (id, oldTask) {
+
+    window.editingTaskId = id;
+
+    $("#newTask").val(oldTask);
+    $("#assignTaskUser").val(userId); 
+
+    // change button text
+    $("#taskSubmitBtn")
+        .text("Update Task")
+        .removeClass("btn-success")
+        .addClass("btn-warning");
+};
+
+window.saveProjectTask = function (projectId) {
+
+    let task = $("#newTask").val().trim();
+    let userId = $("#assignTaskUser").val();
+
+    if (task === "") {
+        Swal.fire("Error", "Task cannot be empty", "error");
+        return;
+    }
+
+    let url = window.editingTaskId
+        ? "../api/projects/update_project_task.cfm"
+        : "../api/projects/add_task_to_project.cfm";
+
+    let payload = {
+        project_id: projectId,
+        task: task,
+        assigned_user_id: userId
+    };
+
+    // if editing → add task id
+    if (window.editingTaskId) {
+        payload.id = window.editingTaskId;
+    }
+
+    $.post(url, payload, function (res) {
+
+        if (res.STATUS === "success") {
+
+            Swal.fire("Success", res.MESSAGE, "success");
+
+            // reset form
+            $("#newTask").val("");
+            $("#assignTaskUser").val("");
+
+            $("#taskSubmitBtn")
+                .text("+ Add Task")
+                .removeClass("btn-warning")
+                .addClass("btn-success");
+
+            window.editingTaskId = null;
+
+            window.viewProject(projectId);
+
+        } else {
+            Swal.fire("Error", res.MESSAGE, "error");
+        }
+
+    }, "json");
 };
 
 // window.loadTaskUsersDropdown = function () {
