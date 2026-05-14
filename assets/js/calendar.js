@@ -170,13 +170,31 @@ document.addEventListener('DOMContentLoaded', function () {
         };
     };
 
-    const postAndRefresh = (url, data, msg) => {
+function postAndRefresh(url, data, msg) {
 
-        $.post(url, data, function () {
+    $.post(url, data, function (res) {
+
+        let result = typeof res === "string" ? JSON.parse(res) : res;
+
+        if (result.SUCCESS) {
+
             Swal.fire(msg, '', 'success');
             calendar.refetchEvents();
-        });
-    };
+
+        } else {
+
+            Swal.fire(
+                "Error",
+                result.MESSAGE || "Something went wrong",
+                "error"
+            );
+        }
+
+    }, "json")
+    .fail(function () {
+        Swal.fire("Server Error", "Request failed", "error");
+    });
+}
 
     window.removeUser = function (userId) {
 
