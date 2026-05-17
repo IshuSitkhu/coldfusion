@@ -38,54 +38,61 @@ document.addEventListener('DOMContentLoaded', function () {
         eventType = 'admin'
     ) => {
 
-        const assignedIds = assignedUsers.map(String);
+const assignedIds = assignedUsers || [];
 
-        const availableUsers = users.filter(u =>
-            !assignedIds.includes(String(u.id))
-        );
+const availableUsers = users.filter(u =>
+    !assignedIds.includes(String(u.id))
+);
 
         let options = availableUsers.map(u => `
-            <option value="${u.ID}">
+            <option value="${u.id}">
                 ${u.name}
             </option>
         `).join('');
 
         let assignedHTML = '';
 
-        if (assignedUsers.length > 0) {
+        console.log("ALL USERS:", users);
+console.log("ASSIGNED:", assignedUsers);
 
-            assignedHTML = assignedUsers.map(uid => {
+        if (assignedUsers && assignedUsers.length > 0) {
 
-                const user = users.find(
-                    u => String(u.id) === String(uid)
-                );
+    assignedHTML = assignedUsers.map(uid => {
 
-                return `
-                    <div style="
-                        display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        padding:6px 10px;
-                        border:1px solid #ddd;
-                        border-radius:6px;
-                        margin-bottom:5px;
-                    ">
-                        <span>
-                            ${user ? user.name : 'Unknown User'}
-                        </span>
+        uid = String(uid);
 
-                        <button 
-                            type="button"
-                            class="btn btn-sm btn-danger"
-                            onclick="removeUser(${uid})"
-                        >
-                            Remove
-                        </button>
-                    </div>
-                `;
-            }).join('');
+        let user = users.find(
+            u => String(u.id) === uid
+        );
 
-        } else {
+        return `
+        <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:6px 10px;
+            border:1px solid #ddd;
+            border-radius:6px;
+            margin-bottom:5px;
+        ">
+
+            <span>
+                ${user ? user.name : 'Unknown User'}
+            </span>
+
+            <button
+                type="button"
+                class="btn btn-sm btn-danger"
+                onclick="removeUser(${uid})"
+            >
+                Remove
+            </button>
+
+        </div>
+        `;
+    }).join('');
+
+} else {
 
             assignedHTML = `
                 <small class="text-muted">
@@ -166,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
             title: document.getElementById('title').value.trim(),
             start: document.getElementById('start').value,
             end: document.getElementById('end').value,
-            users: selectedUsers
+            users: selectedUsers.join(",")
         };
     };
 
@@ -281,6 +288,10 @@ function postAndRefresh(url, data, msg) {
                     event_id: info.event.id
 
                 }, function (assignedUsers) {
+
+                    console.log("EVENT ID:", info.event.id);
+    console.log("RAW ASSIGNED USERS RESPONSE:", assignedUsers);
+    console.log("TYPE:", typeof assignedUsers);
 
                     Swal.fire({
 
