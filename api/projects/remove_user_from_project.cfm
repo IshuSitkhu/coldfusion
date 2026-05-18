@@ -11,7 +11,7 @@
         <cfset result.status = "error">
         <cfset result.message = "Missing data">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -35,14 +35,14 @@
     <cfset result.status = "success">
     <cfset result.message = "User removed successfully">
 
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
 
 <cfcatch>
 
     <cfset result.status = "error">
     <cfset result.message = cfcatch.message>
 
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
 
 </cfcatch>
 </cftry>

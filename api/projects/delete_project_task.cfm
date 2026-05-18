@@ -12,7 +12,7 @@
         <cfset result.status = "error">
         <cfset result.message = "Access denied">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -25,7 +25,7 @@
         <cfset result.status = "error">
         <cfset result.message = "Invalid task ID">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -51,4 +51,4 @@
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>

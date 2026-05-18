@@ -12,7 +12,7 @@
         <cfset result.STATUS = "error">
         <cfset result.MESSAGE = "Unauthorized">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -42,7 +42,7 @@
         <cfset result.STATUS = "error">
         <cfset result.MESSAGE = "Task and user are required">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -71,7 +71,7 @@
         <cfset result.STATUS = "error">
         <cfset result.MESSAGE = "User not assigned to this project">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -128,4 +128,4 @@
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>

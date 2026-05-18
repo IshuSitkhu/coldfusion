@@ -100,4 +100,4 @@ VALUES (
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>

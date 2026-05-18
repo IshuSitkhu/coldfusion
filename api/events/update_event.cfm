@@ -41,7 +41,7 @@
         <cfset result.success = false>
         <cfset result.message = "Event not found">
 
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
 
     </cfif>
@@ -59,7 +59,7 @@
             <cfset result.success = false>
             <cfset result.message = "No permission (admin event)">
 
-            <cfoutput>#serializeJSON(result)#</cfoutput>
+            <cfreturn>#result#</cfreturn>
             <cfabort>
 
         </cfif>
@@ -69,7 +69,7 @@
             <cfset result.success = false>
             <cfset result.message = "No permission (not owner)">
 
-            <cfoutput>#serializeJSON(result)#</cfoutput>
+            <cfreturn>#result#</cfreturn>
             <cfabort>
 
         </cfif>
@@ -165,4 +165,4 @@
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>

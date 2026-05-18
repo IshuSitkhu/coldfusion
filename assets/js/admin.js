@@ -73,8 +73,8 @@ window.createUser = function () {
     }
 
     let url = id
-        ? "../api/users/update_user.cfm"
-        : "../api/users/create_user.cfm";
+        ? "../api/users/users.cfc?method=update"
+        : "../api/users/users.cfc?method=create";
 
     $.ajax({
 
@@ -199,7 +199,7 @@ window.editUser = function (id, name, email) {
     // LOAD USERS
     function loadUsers() {
 
-    $.get("../api/users/get_all_users.cfm", function (data) {
+    $.get("../api/users/users.cfc?method=getAll", function (data) {
 
         let html = "";
 
@@ -253,7 +253,7 @@ window.deleteUser = function (id) {
         if (result.isConfirmed) {
 
             $.ajax({
-    url: "../api/users/delete_user.cfm",
+    url: "../api/users/users.cfc?method=delete",
     method: "POST",
     data: "id=" + id,
     contentType: "application/x-www-form-urlencoded; charset=UTF-8",

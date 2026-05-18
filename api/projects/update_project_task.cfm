@@ -10,7 +10,7 @@
     <cfif NOT structKeyExists(session, "role") OR session.role NEQ "admin">
         <cfset result.status = "error">
         <cfset result.message = "Access denied">
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
     </cfif>
 
@@ -29,7 +29,7 @@
     <cfif id EQ 0 OR task EQ "">
         <cfset result.status = "error">
         <cfset result.message = "Task and ID are required">
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
     </cfif>
 
@@ -57,4 +57,4 @@
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>

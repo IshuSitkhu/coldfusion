@@ -9,7 +9,7 @@
 <cfif NOT structKeyExists(session, "role") OR session.role NEQ "admin">
     <cfset result.status = "error">
     <cfset result.message = "Access denied">
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
     <cfabort>
 </cfif>
 
@@ -25,14 +25,14 @@
 <cfif id EQ 0>
     <cfset result.status = "error">
     <cfset result.message = "Missing or invalid ID">
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
     <cfabort>
 </cfif>
 
 <cfif title EQ "">
     <cfset result.status = "error">
     <cfset result.message = "Title required">
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
     <cfabort>
 </cfif>
 
@@ -67,12 +67,12 @@
 <cfset result.status = "success">
 <cfset result.message = "Project updated successfully">
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>
 
 <cfcatch>
     <cfset result.status = "error">
     <cfset result.message = cfcatch.message>
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
 </cfcatch>
 
 </cftry>

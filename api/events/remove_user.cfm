@@ -11,7 +11,7 @@
 <cfif event_id LTE 0 OR user_id LTE 0>
     <cfset result.SUCCESS = false>
     <cfset result.MESSAGE = "Invalid input">
-    <cfoutput>#serializeJSON(result)#</cfoutput>
+    <cfreturn>#result#</cfreturn>
     <cfabort>
 </cfif>
 
@@ -31,4 +31,4 @@
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>

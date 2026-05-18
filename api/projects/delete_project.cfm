@@ -9,7 +9,7 @@
     <cfif NOT structKeyExists(form, "id") OR NOT len(trim(form.id))>
         <cfset result.STATUS = "error">
         <cfset result.MESSAGE = "Project ID is required">
-        <cfoutput>#serializeJSON(result)#</cfoutput>
+        <cfreturn>#result#</cfreturn>
         <cfabort>
     </cfif>
 
@@ -38,4 +38,4 @@
 
 </cftry>
 
-<cfoutput>#serializeJSON(result)#</cfoutput>
+<cfreturn>#result#</cfreturn>
