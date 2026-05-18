@@ -12,7 +12,17 @@
 <cfset start = form.start>
 <cfset end = form.end>
 
-<cfset users = structKeyExists(form, "users") ? form.users : []>
+<cfset users = []>
+
+<cfif structKeyExists(form, "users")>
+
+    <cfif isArray(form.users)>
+        <cfset users = form.users>
+    <cfelseif len(form.users)>
+        <cfset users = listToArray(form.users)>
+    </cfif>
+
+</cfif>
 
 <cfif NOT isArray(users)>
     <cfset users = [users]>

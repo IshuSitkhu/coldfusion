@@ -1,10 +1,7 @@
-<?php
-include '../auth/auth.cfm';
-
-if ($_SESSION['role'] != 'staff') {
-    die("Access Denied");
-}
-?>
+<cfif NOT structKeyExists(session, "role") OR session.role NEQ "staff">
+    <cfoutput>Access Denied</cfoutput>
+    <cfabort>
+</cfif>
 
 <!DOCTYPE html>
 <html>
@@ -26,8 +23,8 @@ if ($_SESSION['role'] != 'staff') {
     <script src="../assets/js/calendar.js"></script>
 
     <script src="../assets/js/staff.js"></script>
-    <script>
-    window.USER_ID = <?php echo $_SESSION['user_id']; ?>;
+<script>
+    window.USER_ID = <cfoutput>#session.user_id#</cfoutput>;
 </script>
 
     <style>

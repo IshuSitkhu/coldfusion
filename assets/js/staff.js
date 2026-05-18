@@ -124,7 +124,7 @@ $(document).ready(function () {
                 const createdBy = info.event.extendedProps?.created_by;
 
                 const isOwnStaffEvent =
-                    eventType === 'staff' && createdBy == USER_ID;
+                    eventType === 'staff' && String(createdBy) === String(USER_ID);
 
                 if (!isOwnStaffEvent) {
                     info.el.setAttribute("draggable", false);
@@ -137,7 +137,7 @@ $(document).ready(function () {
     const createdBy = info.event.extendedProps?.created_by;
 
     const isOwnStaffEvent =
-        eventType === 'staff' && createdBy == USER_ID;
+        eventType === 'staff' && String(createdBy) === String(USER_ID);
 
     if (!isOwnStaffEvent && eventType === 'staff') {
         info.revert();
@@ -191,7 +191,7 @@ $(document).ready(function () {
                 const createdBy = info.event.extendedProps?.created_by;
 
                 const isOwnStaffEvent =
-                    eventType === 'staff' && createdBy == USER_ID;
+                    eventType === 'staff' && String(createdBy) === String(USER_ID);
 
                 if (!isOwnStaffEvent) {
                     info.revert();
@@ -248,7 +248,7 @@ $(document).ready(function () {
     const createdBy = info.event.extendedProps?.created_by;
 
     const isOwnStaffEvent =
-        eventType === 'staff' && createdBy == USER_ID;
+        eventType === 'staff' && String(createdBy) === String(USER_ID);
 
     if (isOwnStaffEvent) {
 
