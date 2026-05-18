@@ -787,7 +787,7 @@ window.loadProjectTaskUsers = function (projectId) {
         return;
     }
 
-    $.get("../api/projects/get_project_users.cfm?project_id=" + projectId, function (users) {
+    $.get("../api/projects/projects.cfc?method=getUsers&project_id=" + projectId, function (users) {
 
         console.log("Project Users API:", users);
 
@@ -813,7 +813,7 @@ window.loadProjectTaskUsers = function (projectId) {
 window.loadProjectUsersDropdown = function () {
 
    
-    $.get("../api/users/get_all_users.cfm", function (users) {
+    $.get("../api/users/users.cfc?method=getAll", function (users) {
          
         let options = `<option value="">Select User</option>`;
 
@@ -842,7 +842,7 @@ window.addUserToProject = function (projectId) {
         return;
     }
 
-    $.post("../api/projects/add_user_to_project.cfm", {
+    $.post("../api/projects/projects.cfc?method=addUser", {
         project_id: projectId,
         user_id: userId
     }, function (res) {
@@ -863,7 +863,7 @@ window.addUserToProject = function (projectId) {
 
 window.removeUserFromProject = function(projectId, userId) {
 
-    $.post("../api/projects/remove_user_from_project.cfm", {
+    $.post("../api/projects/projects.cfc?method=removeUser", {
         project_id: projectId,
         user_id: userId
     }, function(res) {
@@ -998,7 +998,7 @@ window.saveProjectTask = function (projectId) {
 
 // window.loadTaskUsersDropdown = function () {
 
-//     $.get("../api/users/get_all_users.cfm", function (users) {
+//     $.get("../api/users/users.cfc?method=getAll", function (users) {
 
 //         let options = `<option value="">Assign to User</option>`;
 
