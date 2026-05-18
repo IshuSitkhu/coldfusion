@@ -407,7 +407,7 @@ window.deleteUser = function (id) {
 
     function loadUsersDropdown() {
 
-        $.get("../api/users/get_all_users.cfm", function (users) {
+        $.get("../api/users/users.cfc?method=getAll", function (users) {
 
             let options = "";
 
@@ -437,7 +437,7 @@ window.openProjects = function () {
 // USERS DROPDOWN
 window.loadProjectUsers = function () {
 
-    $.get("../api/users/get_all_users.cfm", function (users) {
+    $.get("../api/users/users.cfc?method=getAll", function (users) {
 
         let options = "";
 
@@ -452,7 +452,7 @@ window.loadProjectUsers = function () {
 
 window.loadProjects = function () {
 
-    $.get("../api/projects/get_projects.cfm", function (data) {
+    $.get("../api/projects/projects.cfc?method=getAll", function (data) {
 
         let html = "";
 
@@ -507,8 +507,8 @@ window.createProject = function () {
     let isUpdate = !!window.editProjectId;
 
     let url = isUpdate
-        ? "../api/projects/update_project.cfm"
-        : "../api/projects/create_project.cfm";
+        ? "../api/projects/projects.cfc?method=update"
+        : "../api/projects/projects.cfc?method=create";
 
     $.ajax({
         url: url,
@@ -1061,7 +1061,7 @@ window.deleteProjectTask = function (id) {
 
         if (result.isConfirmed) {
 
-            $.post("../api/projects/delete_project_task.cfm", {
+            $.post("../api/projects/projects.cfc?method=delete", {
                 id: id
             }, function (res) {
 
@@ -1118,7 +1118,7 @@ window.deleteProject = function (id) {
         if (!result.isConfirmed) return;
 
         $.ajax({
-            url: "../api/projects/delete_project.cfm",
+            url: "../api/projects/projects.cfc?method=delete",
             type: "POST",
             data: { id: id },
             dataType: "json",
