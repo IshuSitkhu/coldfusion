@@ -103,7 +103,7 @@
 
     <cfset var events = []>
 
-    <cfif NOT structKeyExists(session, "user_id") OR NOT structKeyExists(session, "role")>
+    <cfif NOT structKeyExists(session, "user_id")>
         <cfreturn events>
     </cfif>
 
@@ -121,15 +121,35 @@
             u.name AS created_by_name
         FROM events e
         LEFT JOIN users u ON u.id = e.created_by
-        <cfif role NEQ "admin">
-            INNER JOIN event_users eu ON eu.event_id = e.id
-            WHERE eu.user_id = <cfqueryparam value="#user_id#" cfsqltype="cf_sql_integer">
-        </cfif>
+
+        WHERE
+        (
+            -- STAFF PERSONAL EVENTS
+            (e.event_type = 'staff' AND e.created_by = <cfqueryparam value="#user_id#" cfsqltype="cf_sql_integer">)
+
+            OR
+
+            -- ASSIGNED EVENTS
+            e.id IN (
+                SELECT event_id 
+                FROM event_users 
+                WHERE user_id = <cfqueryparam value="#user_id#" cfsqltype="cf_sql_integer">
+            )
+
+            OR
+
+            -- ADMIN SEES ALL
+            <cfif role EQ "admin">
+                1=1
+            <cfelse>
+                1=0
+            </cfif>
+        )
+
         ORDER BY e.start_date
     </cfquery>
 
     <cfloop query="qEvents">
-
         <cfset arrayAppend(events, {
             "id": qEvents.id,
             "title": qEvents.title,
@@ -141,132 +161,94 @@
                 "event_type": qEvents.event_type
             }
         })>
-
     </cfloop>
 
     <cfreturn events>
 
 </cffunction>
 
-<cffunction name="updateEvent"
-    access="remote"
-    returntype="struct"
-    returnformat="json"
-    output="false">
+<cffunction name="updateEvent" access="remote" returntype="struct" returnformat="json" output="false">
 
-    <cfset var result = structNew()>
+<cfset var result = {}>
 
-    <!--- SESSION CHECK --->
-    <cfif NOT structKeyExists(session, "user_id") OR NOT structKeyExists(session, "role")>
-        <cfset result.SUCCESS = false>
-        <cfset result.MESSAGE = "Session expired">
+<cftry>
+
+    <cfset var user_id = session.user_id>
+    <cfset var role = session.role>
+
+    <cfset var id = val(form.id)>
+    <cfset var title = trim(form.title)>
+    <cfset var start_date = form.start>
+    <cfset var end_date = form.end>
+
+    <cfset var users = []>
+
+    <cfif structKeyExists(form, "users")>
+        <cfset users = form.users>
+    </cfif>
+
+    <cfif NOT isArray(users)>
+        <cfset users = [users]>
+    </cfif>
+
+    <!--- GET EVENT --->
+    <cfquery name="getEvent" datasource="todo">
+        SELECT * FROM events WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
+    </cfquery>
+
+    <cfif getEvent.recordCount EQ 0>
+        <cfset result.success = false>
+        <cfset result.message = "Event not found">
         <cfreturn result>
     </cfif>
 
-    <cftry>
+    <cfset var event_type = getEvent.event_type>
+    <cfset var created_by = getEvent.created_by>
 
-        <!--- SESSION DATA --->
-        <cfset var user_id = session.user_id>
-        <cfset var role = session.role>
+    <!--- PERMISSION CHECK (EXACT SAME AS OLD) --->
+    <cfif role NEQ "admin">
 
-        <!--- FORM DATA --->
-        <cfset var id = val(form.id)>
-        <cfset var title = trim(form.title)>
-        <cfset var start_date = form.start>
-        <cfset var end_date = form.end>
-
-        <!--- NORMALIZE USERS --->
-        <cfset var users = []>
-
-        <cfif structKeyExists(form, "users") AND len(trim(form.users))>
-            <cfset users = listToArray(form.users)>
-        </cfif>
-
-        <cfif NOT isArray(users)>
-            <cfset users = [users]>
-        </cfif>
-
-        <!--- GET EVENT --->
-        <cfquery name="getEvent" datasource="todo">
-            SELECT *
-            FROM events
-            WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
-        </cfquery>
-
-        <cfif getEvent.recordCount EQ 0>
-            <cfset result.SUCCESS = false>
-            <cfset result.MESSAGE = "Event not found">
+        <cfif event_type EQ "admin">
+            <cfset result.success = false>
+            <cfset result.message = "No permission (admin event)">
             <cfreturn result>
         </cfif>
 
-        <!--- EVENT DATA --->
-        <cfset var event_type = getEvent.event_type>
-        <cfset var created_by = getEvent.created_by>
-
-        <!--- PERMISSION CHECK --->
-        <cfif role NEQ "admin">
-            <cfif event_type EQ "admin" OR created_by NEQ user_id>
-                <cfset result.SUCCESS = false>
-                <cfset result.MESSAGE = "No permission">
-                <cfreturn result>
-            </cfif>
+        <cfif created_by NEQ user_id>
+            <cfset result.success = false>
+            <cfset result.message = "No permission (not owner)">
+            <cfreturn result>
         </cfif>
 
-        <!--- UPDATE EVENT TABLE --->
-        <cfquery datasource="todo">
-            UPDATE events
-            SET
-                title = <cfqueryparam value="#title#" cfsqltype="cf_sql_varchar">,
-                start_date = <cfqueryparam value="#start_date#" cfsqltype="cf_sql_date">,
-                end_date = <cfqueryparam value="#end_date#" cfsqltype="cf_sql_date">
-            WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
-        </cfquery>
+    </cfif>
 
-        <!--- 🔥 UPDATE ASSIGNMENTS (SAFE MERGE STYLE) --->
-        
-        <!--- GET EXISTING USERS --->
-        <cfquery name="existingUsers" datasource="todo">
-            SELECT user_id
-            FROM event_users
+    <!--- BLOCK USERS FOR STAFF EVENTS --->
+    <cfif event_type EQ "staff">
+        <cfset users = []>
+    </cfif>
+
+    <!--- UPDATE EVENT --->
+    <cfquery datasource="todo">
+        UPDATE events
+        SET
+            title = <cfqueryparam value="#title#" cfsqltype="cf_sql_varchar">,
+            start_date = <cfqueryparam value="#start_date#" cfsqltype="cf_sql_date">,
+            end_date = <cfqueryparam value="#end_date#" cfsqltype="cf_sql_date">
+        WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
+    </cfquery>
+
+    <!--- ONLY ADMIN EVENTS CAN MODIFY USERS --->
+    <cfif role EQ "admin" AND event_type EQ "admin">
+
+        <cfquery datasource="todo">
+            DELETE FROM event_users
             WHERE event_id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
         </cfquery>
 
-        <cfset var existingList = []>
+        <cfloop array="#users#" index="uid">
+            <cfset uid = val(uid)>
 
-        <cfloop query="existingUsers">
-            <cfset arrayAppend(existingList, existingUsers.user_id)>
-        </cfloop>
-
-        <!--- NEW USERS --->
-        <cfset var newList = []>
-
-        <cfloop array="#users#" index="u">
-            <cfset u = val(u)>
-            <cfif u GT 0>
-                <cfset arrayAppend(newList, u)>
-            </cfif>
-        </cfloop>
-
-        <!--- MERGE (NO DUPLICATES) --->
-        <cfset var finalList = duplicate(existingList)>
-
-        <cfloop array="#newList#" index="u">
-            <cfif NOT arrayContains(finalList, u)>
-                <cfset arrayAppend(finalList, u)>
-            </cfif>
-        </cfloop>
-
-        <!--- INSERT ONLY MISSING USERS --->
-        <cfloop array="#finalList#" index="uid">
-
-            <cfquery name="checkUser" datasource="todo">
-                SELECT id
-                FROM event_users
-                WHERE event_id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
-                AND user_id = <cfqueryparam value="#uid#" cfsqltype="cf_sql_integer">
-            </cfquery>
-
-            <cfif checkUser.recordCount EQ 0>
+            <cfif uid GT 0>
                 <cfquery datasource="todo">
                     INSERT INTO event_users (event_id, user_id)
                     VALUES (
@@ -275,23 +257,23 @@
                     )
                 </cfquery>
             </cfif>
-
         </cfloop>
 
-        <!--- SUCCESS --->
-        <cfset result.SUCCESS = true>
-        <cfset result.MESSAGE = "Event updated successfully">
+    </cfif>
 
-    <cfcatch>
-        <cfset result.SUCCESS = false>
-        <cfset result.MESSAGE = cfcatch.message>
-    </cfcatch>
+    <cfset result.success = true>
+    <cfset result.message = "Event updated">
 
-    </cftry>
+<cfcatch>
+    <cfset result.success = false>
+    <cfset result.message = cfcatch.message>
+</cfcatch>
 
-    <cfreturn result>
+</cftry>
 
-</cffunction>
+<cfreturn result>
+
+</cffunction>>
 
 <cffunction name="deleteEvent"
     access="remote"
