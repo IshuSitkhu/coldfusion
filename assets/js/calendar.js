@@ -444,11 +444,23 @@ const availableUsers = users.filter(u =>
 
             let start = formatDate(info.event.start);
 
-            let end = info.event.end
-                ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                : start;
+                let end = start;
 
-            console.log(" Drop dates:", { start, end });
+                if (info.event.end) {
+
+                    let adjustedEnd = new Date(info.event.end);
+
+                    adjustedEnd.setDate(
+                        adjustedEnd.getDate() - 1
+                    );
+
+                    end = formatDate(adjustedEnd);
+                }
+
+                console.log(" Corrected dates:", {
+                    start,
+                    end
+                });
 
             $.post('../api/events/event.cfc?method=updateEvent', {
                 id: info.event.id,
