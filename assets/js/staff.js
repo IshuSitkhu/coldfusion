@@ -162,32 +162,19 @@ $(document).ready(function () {
 
             eventDrop: function (info) {
 
-                console.log(" eventDrop fired");
+                console.log("eventDrop fired");
                 console.log("EVENT:", info.event);
 
-                const eventType = info.event.extendedProps?.event_type;
-                const createdBy = info.event.extendedProps?.created_by;
-
-                console.log(" Type:", eventType, "CreatedBy:", createdBy);
-
-                const isOwnStaffEvent =
-                    eventType === 'staff' && String(createdBy) === String(USER_ID);
-
-                console.log(" isOwnStaffEvent:", isOwnStaffEvent);
-
-                if (!isOwnStaffEvent && eventType === 'staff') {
-                    console.log(" DROP BLOCKED");
-                    info.revert();
-                    return;
-                }
-
-                let start = formatDate(info.event.start);
-
-                let end = info.event.end
-                    ? formatDate(info.event.end)
+                let start = info.event.startStr.split("T")[0];
+                let end = info.event.endStr
+                    ? info.event.endStr.split("T")[0]
                     : start;
 
-                console.log(" Sending update:", { start, end });
+                console.log("Sending update:", {
+                    id: info.event.id,
+                    start,
+                    end
+                });
 
                 $.post("../api/events/event.cfc?method=updateEvent", {
                     id: info.event.id,
@@ -196,18 +183,20 @@ $(document).ready(function () {
                     end: end
                 }, function (res) {
 
-                    console.log(" DROP RESPONSE:", res);
+                    console.log("DROP RESPONSE:", res);
 
-                    if (!res.success) {
-                        console.log(" DROP FAILED");
+                    if (!res.success && !res.SUCCESS) {
+                        console.log("UPDATE FAILED → reverting");
                         info.revert();
                         return;
                     }
 
-                    console.log(" DROP SUCCESS");
+                    console.log("UPDATE SUCCESS");
 
-                }, "json");
-
+                }, "json").fail(function (err) {
+                    console.log("AJAX ERROR:", err);
+                    info.revert();
+                });
             },
 
             eventResize: function (info) {
@@ -294,7 +283,7 @@ $(document).ready(function () {
             html: `
                 <input id="title" class="swal2-input" value="${info.event.title}">
                 <input id="start" type="date" class="swal2-input"
-                    value="${info.event.start.toISOString().split('T')[0]}">
+                    value="${info.event.startStr.split('T')[0]}">
                 <input id="end" type="date" class="swal2-input"
                     value="${info.event.end ? info.event.end.toISOString().split('T')[0] : ''}">
             `,
