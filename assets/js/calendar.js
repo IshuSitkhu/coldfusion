@@ -344,6 +344,9 @@ const availableUsers = users.filter(u =>
             currentEventId = info.event.id;
 
             const eventType = info.event.extendedProps?.event_type;
+            const createdByName = info.event.extendedProps?.created_by_name 
+                   || info.event.extendedProps?.created_by_username 
+                   || 'Unknown';
             const isStaffEvent = eventType === 'staff';
 
             console.log(" Event type:", eventType);
@@ -364,19 +367,28 @@ const availableUsers = users.filter(u =>
 
                         title: 'Edit Event',
 
-                        html: eventFormHTML(
-                            {
-                                title: info.event.title,
-                                start: formatDate(info.event.start),
-                                end: info.event.end
-                                    ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                                    : formatDate(info.event.start),
-                                users: assignedUsers
-                            },
-                            allUsers,
-                            assignedUsers,
-                            eventType
-                        ),
+                        html: `
+                            ${eventType === 'staff'
+                                ? `<div style="text-align:left; margin-bottom:10px;">
+                                        <strong>Created By:</strong> ${createdByName}
+                                </div>`
+                                : ''
+                            }
+
+                            ${eventFormHTML(
+                                {
+                                    title: info.event.title,
+                                    start: formatDate(info.event.start),
+                                    end: info.event.end
+                                        ? formatDate(new Date(info.event.end.getTime() - 86400000))
+                                        : formatDate(info.event.start),
+                                    users: assignedUsers
+                                },
+                                allUsers,
+                                assignedUsers,
+                                eventType
+                            )}
+                        `,
 
                         showCancelButton: true,
                         showDenyButton: true,
