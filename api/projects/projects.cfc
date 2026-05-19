@@ -349,4 +349,167 @@
         </cftry>
     </cffunction>
 
+    <cffunction name="addTask" access="remote" returntype="struct" returnformat="json">
+        <cfset var result = structNew()>
+
+        <cftry>
+
+            <cfif NOT structKeyExists(session, "user_id")>
+                <cfset result.STATUS = "error">
+                <cfset result.MESSAGE = "Unauthorized">
+                <cfreturn result>
+            </cfif>
+
+            <cfparam name="project_id" default="0">
+            <cfparam name="task" default="">
+            <cfparam name="assigned_user_id" default="0">
+
+            <cfset project_id = val(project_id)>
+            <cfset task = trim(task)>
+            <cfset assigned_user_id = val(assigned_user_id)>
+            <cfset assigned_by = session.user_id>
+
+            <cfif project_id EQ 0 OR task EQ "" OR assigned_user_id EQ 0>
+                <cfset result.STATUS = "error">
+                <cfset result.MESSAGE = "Invalid input">
+                <cfreturn result>
+            </cfif>
+
+            <cfquery name="qCheck" datasource="todo">
+                SELECT id
+                FROM project_users
+                WHERE project_id = <cfqueryparam value="#project_id#" cfsqltype="cf_sql_integer">
+                AND user_id = <cfqueryparam value="#assigned_user_id#" cfsqltype="cf_sql_integer">
+            </cfquery>
+
+            <cfif qCheck.recordCount EQ 0>
+                <cfset result.STATUS = "error">
+                <cfset result.MESSAGE = "User not in project">
+                <cfreturn result>
+            </cfif>
+
+            <cfquery datasource="todo">
+                INSERT INTO project_tasks (
+                    project_id,
+                    task,
+                    assigned_user_id,
+                    assigned_by,
+                    status
+                )
+                VALUES (
+                    <cfqueryparam value="#project_id#" cfsqltype="cf_sql_integer">,
+                    <cfqueryparam value="#task#" cfsqltype="cf_sql_varchar">,
+                    <cfqueryparam value="#assigned_user_id#" cfsqltype="cf_sql_integer">,
+                    <cfqueryparam value="#assigned_by#" cfsqltype="cf_sql_integer">,
+                    'pending'
+                )
+            </cfquery>
+
+            <cfset result.STATUS = "success">
+            <cfset result.MESSAGE = "Task added successfully">
+
+            <cfreturn result>
+
+        <cfcatch>
+            <cfset result.STATUS = "error">
+            <cfset result.MESSAGE = cfcatch.message>
+            <cfreturn result>
+        </cfcatch>
+
+        </cftry>
+    </cffunction>
+
+    <cffunction name="updateTask" access="remote" returntype="struct" returnformat="json">
+        <cfset var result = structNew()>
+
+        <cftry>
+
+            <!--- AUTH CHECK --->
+            <cfif NOT structKeyExists(session, "role") OR session.role NEQ "admin">
+                <cfset result.status = "error">
+                <cfset result.message = "Access denied">
+                <cfreturn result>
+            </cfif>
+
+            <!--- INPUTS --->
+            <cfparam name="id" default="0">
+            <cfparam name="task" default="">
+            <cfparam name="status" default="pending">
+            <cfparam name="assigned_user_id" default="0">
+
+            <cfset id = val(id)>
+            <cfset task = trim(task)>
+            <cfset status = trim(status)>
+            <cfset assigned_user_id = val(assigned_user_id)>
+
+            <!--- VALIDATION --->
+            <cfif id EQ 0 OR task EQ "">
+                <cfset result.status = "error">
+                <cfset result.message = "Task and ID are required">
+                <cfreturn result>
+            </cfif>
+
+            <!--- UPDATE TASK --->
+            <cfquery datasource="todo">
+                UPDATE project_tasks
+                SET 
+                    task = <cfqueryparam value="#task#" cfsqltype="cf_sql_varchar">,
+                    status = <cfqueryparam value="#status#" cfsqltype="cf_sql_varchar">,
+                    assigned_user_id = <cfqueryparam value="#assigned_user_id#" cfsqltype="cf_sql_integer">
+                WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
+            </cfquery>
+
+            <cfset result.status = "success">
+            <cfset result.message = "Task updated successfully">
+
+            <cfreturn result>
+
+        <cfcatch>
+            <cfset result.status = "error">
+            <cfset result.message = cfcatch.message>
+            <cfreturn result>
+        </cfcatch>
+
+        </cftry>
+    </cffunction>
+
+    <cffunction name="deleteTask" access="remote" returntype="struct" returnformat="json">
+        <cfset var result = structNew()>
+
+        <cftry>
+
+            <cfif NOT structKeyExists(session, "role") OR session.role NEQ "admin">
+                <cfset result.STATUS = "error">
+                <cfset result.MESSAGE = "Access denied">
+                <cfreturn result>
+            </cfif>
+
+            <cfparam name="id" default="0">
+            <cfset id = val(id)>
+
+            <cfif id EQ 0>
+                <cfset result.STATUS = "error">
+                <cfset result.MESSAGE = "Invalid task id">
+                <cfreturn result>
+            </cfif>
+
+            <cfquery datasource="todo">
+                DELETE FROM project_tasks
+                WHERE id = <cfqueryparam value="#id#" cfsqltype="cf_sql_integer">
+            </cfquery>
+
+            <cfset result.STATUS = "success">
+            <cfset result.MESSAGE = "Task deleted successfully">
+
+            <cfreturn result>
+
+        <cfcatch>
+            <cfset result.STATUS = "error">
+            <cfset result.MESSAGE = cfcatch.message>
+            <cfreturn result>
+        </cfcatch>
+
+        </cftry>
+    </cffunction>
+
 </cfcomponent>

@@ -1,33 +1,50 @@
 document.addEventListener('DOMContentLoaded', function () {
 
+    console.log(" Calendar script loaded");
+
     const calendarEl = document.getElementById('calendar');
 
     let currentEventId = null;
-
     let currentUserId = window.CURRENT_USER_ID || null;
 
+    console.log(" Current User ID:", currentUserId);
+
     const formatDate = (date) => {
-        if (!date) return '';
+        console.log(" formatDate input:", date);
+
+        if (!date) {
+            console.log(" formatDate: empty date");
+            return '';
+        }
 
         let year = date.getFullYear();
         let month = String(date.getMonth() + 1).padStart(2, '0');
         let day = String(date.getDate()).padStart(2, '0');
 
-        return `${year}-${month}-${day}`;
+        let formatted = `${year}-${month}-${day}`;
+
+        console.log("✅ formatDate output:", formatted);
+
+        return formatted;
     };
 
     const validateEvent = ({ title, start, end }) => {
 
+        console.log("🧪 validateEvent called:", { title, start, end });
+
         if (!title || !start || !end) {
+            console.log(" Validation failed: missing fields");
             Swal.showValidationMessage("All fields are required");
             return false;
         }
 
         if (end < start) {
+            console.log(" Validation failed: end < start");
             Swal.showValidationMessage("End date cannot be before start date");
             return false;
         }
 
+        console.log(" Validation passed");
         return true;
     };
 
@@ -38,11 +55,30 @@ document.addEventListener('DOMContentLoaded', function () {
         eventType = 'admin'
     ) => {
 
-const assignedIds = assignedUsers || [];
+        console.log(" eventFormHTML called");
+        users = (typeof users === "string") ? JSON.parse(users) : users;
+
+        assignedUsers = (typeof assignedUsers === "string")
+    ? JSON.parse(assignedUsers)
+    : assignedUsers;
+
+if (!Array.isArray(assignedUsers)) {
+    assignedUsers = [];
+}
+        console.log("DATA:", data);
+        console.log("USERS:", users);
+        console.log("ASSIGNED USERS:", assignedUsers);
+        console.log("EVENT TYPE:", eventType);
+
+        const assignedIds = Array.isArray(assignedUsers)
+    ? assignedUsers.map(String)
+    : [];
 
 const availableUsers = users.filter(u =>
     !assignedIds.includes(String(u.id))
 );
+
+        console.log(" Available users:", availableUsers);
 
         let options = availableUsers.map(u => `
             <option value="${u.id}">
@@ -52,56 +88,55 @@ const availableUsers = users.filter(u =>
 
         let assignedHTML = '';
 
-        console.log("ALL USERS:", users);
-console.log("ASSIGNED:", assignedUsers);
+        console.log(" ALL USERS:", users);
+        console.log(" ASSIGNED:", assignedUsers);
 
         if (assignedUsers && assignedUsers.length > 0) {
 
-    assignedHTML = assignedUsers.map(uid => {
+            assignedHTML = (Array.isArray(assignedUsers) ? assignedUsers : []).map(uid => {
 
-        uid = String(uid);
+                uid = String(uid);
 
-        let user = users.find(
-            u => String(u.id) === uid
-        );
+                let user = users.find(
+                    u => String(u.id) === uid
+                );
 
-        return `
-        <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            padding:6px 10px;
-            border:1px solid #ddd;
-            border-radius:6px;
-            margin-bottom:5px;
-        ">
+                console.log(" mapping user:", uid, user);
 
-            <span>
-                ${user ? user.name : 'Unknown User'}
-            </span>
+                return `
+                <div style="
+                    display:flex;
+                    justify-content:space-between;
+                    align-items:center;
+                    padding:6px 10px;
+                    border:1px solid #ddd;
+                    border-radius:6px;
+                    margin-bottom:5px;
+                ">
 
-            <button
-                type="button"
-                class="btn btn-sm btn-danger"
-                onclick="removeUser(${uid})"
-            >
-                Remove
-            </button>
+                    <span>
+                        ${user ? user.name : 'Unknown User'}
+                    </span>
 
-        </div>
-        `;
-    }).join('');
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-danger"
+                        onclick="removeUser(${uid})"
+                    >
+                        Remove
+                    </button>
 
-} else {
+                </div>
+                `;
+            }).join('');
 
-            assignedHTML = `
-                <small class="text-muted">
-                    No users assigned
-                </small>
-            `;
+        } else {
+            console.log(" No assigned users");
+            assignedHTML = `<small class="text-muted">No users assigned</small>`;
         }
 
         const isStaffEvent = eventType === 'staff';
+        console.log(" isStaffEvent:", isStaffEvent);
 
         return `
             <div style="text-align:left;">
@@ -165,50 +200,70 @@ console.log("ASSIGNED:", assignedUsers);
 
     const getFormData = () => {
 
+        console.log(" getFormData called");
+
         let selectedUsers = Array.from(
             document.getElementById('users').selectedOptions
         ).map(opt => opt.value);
 
-        return {
+        let data = {
             title: document.getElementById('title').value.trim(),
             start: document.getElementById('start').value,
             end: document.getElementById('end').value,
             users: selectedUsers.join(",")
         };
+
+        console.log(" Form Data:", data);
+
+        return data;
     };
 
-function postAndRefresh(url, data, msg) {
+    function postAndRefresh(url, data, msg) {
 
-    $.post(url, data, function (res) {
+        console.log(" postAndRefresh called");
+        console.log("URL:", url);
+        console.log("DATA:", data);
 
-        let result = typeof res === "string" ? JSON.parse(res) : res;
+        $.post(url, data, function (res) {
 
-        if (result.SUCCESS) {
+            console.log(" Response received:", res);
 
-            Swal.fire(msg, '', 'success');
-            calendar.refetchEvents();
+            let result = typeof res === "string" ? JSON.parse(res) : res;
 
-        } else {
+            if (result.SUCCESS) {
 
-            Swal.fire(
-                "Error",
-                result.MESSAGE || "Something went wrong",
-                "error"
-            );
-        }
+                console.log(" Success response");
+                Swal.fire(msg, '', 'success');
+                calendar.refetchEvents();
 
-    }, "json")
-    .fail(function () {
-        Swal.fire("Server Error", "Request failed", "error");
-    });
-}
+            } else {
+
+                console.log(" Error response");
+                Swal.fire(
+                    "Error",
+                    result.MESSAGE || "Something went wrong",
+                    "error"
+                );
+            }
+
+        }, "json")
+        .fail(function (err) {
+            console.log(" Server error:", err);
+            Swal.fire("Server Error", "Request failed", "error");
+        });
+    }
 
     window.removeUser = function (userId) {
 
-        $.post('../api/events/remove_user.cfm', {
+        console.log(" removeUser called:", userId);
+        console.log("Event ID:", currentEventId);
+
+        $.post('../api/events/event.cfc?method=removeUser', {
             event_id: currentEventId,
             user_id: userId
-        }, function () {
+        }, function (res) {
+
+            console.log(" removeUser response:", res);
 
             Swal.fire({
                 icon: 'success',
@@ -228,14 +283,17 @@ function postAndRefresh(url, data, msg) {
         initialView: 'dayGridMonth',
         displayEventTime: false,
         eventColor: "#0d6efd",
-
         editable: true,
 
-        events: '../api/events/get_events.cfm',
+        events: '../api/events/event.cfc?method=getEvents',
 
         dateClick: function (info) {
 
-            $.get('../api/events/get_users.cfm', function (users) {
+            console.log(" dateClick:", info.dateStr);
+
+            $.getJSON('../api/events/event.cfc?method=getUsers', function (users) {
+
+                console.log(" Users loaded:", users);
 
                 Swal.fire({
 
@@ -256,15 +314,20 @@ function postAndRefresh(url, data, msg) {
 
                     preConfirm: () => {
                         let data = getFormData();
+                        console.log(" preConfirm data:", data);
                         return validateEvent(data) && data;
                     }
 
                 }).then((result) => {
 
+                    console.log(" Swal result:", result);
+
                     if (result.isConfirmed) {
 
+                        console.log(" Creating event...");
+
                         postAndRefresh(
-                            '../api/events/add_event.cfm',
+                            '../api/events/event.cfc?method=addEvent',
                             result.value,
                             'Added!'
                         );
@@ -276,66 +339,44 @@ function postAndRefresh(url, data, msg) {
 
         eventClick: function (info) {
 
+            console.log(" eventClick:", info.event);
+
             currentEventId = info.event.id;
 
             const eventType = info.event.extendedProps?.event_type;
             const isStaffEvent = eventType === 'staff';
 
-            $.get('../api/events/get_users.cfm', function (allUsers) {
+            console.log(" Event type:", eventType);
 
-                $.get('../api/events/get_event_users.cfm', {
+            $.get('../api/events/event.cfc?method=getUsers', function (allUsers) {
+
+                console.log(" All users:", allUsers);
+
+                $.get('../api/events/event.cfc?method=getEventUsers', {
 
                     event_id: info.event.id
 
                 }, function (assignedUsers) {
 
-                    console.log("EVENT ID:", info.event.id);
-    console.log("RAW ASSIGNED USERS RESPONSE:", assignedUsers);
-    console.log("TYPE:", typeof assignedUsers);
+                    console.log(" Assigned users:", assignedUsers);
 
                     Swal.fire({
 
                         title: 'Edit Event',
 
-                        html: `
-    ${
-        isStaffEvent
-        ? `
-            <div style="
-    text-align:left;
-    margin-bottom:12px;
-    padding:8px 12px;
-    background:#f8f9fa;
-    border-left:4px solid #0d6efd;
-    border-radius:8px;
-    font-size:24px;
-">
-    <small style="
-        color:#0d6efd;
-        font-weight:600;
-        letter-spacing:0.3px;
-    ">
-        Created By: ${info.event.extendedProps?.created_by_name || 'Unknown'}
-    </small>
-</div>
-        `
-        : ''
-    }
-
-    ${eventFormHTML(
-        {
-            title: info.event.title,
-            start: formatDate(info.event.start),
-            end: info.event.end
-                ? formatDate(new Date(info.event.end.getTime() - 86400000))
-                : formatDate(info.event.start),
-            users: assignedUsers
-        },
-        allUsers,
-        assignedUsers,
-        eventType
-    )}
-`,
+                        html: eventFormHTML(
+                            {
+                                title: info.event.title,
+                                start: formatDate(info.event.start),
+                                end: info.event.end
+                                    ? formatDate(new Date(info.event.end.getTime() - 86400000))
+                                    : formatDate(info.event.start),
+                                users: assignedUsers
+                            },
+                            allUsers,
+                            assignedUsers,
+                            eventType
+                        ),
 
                         showCancelButton: true,
                         showDenyButton: true,
@@ -344,15 +385,20 @@ function postAndRefresh(url, data, msg) {
 
                         preConfirm: () => {
                             let data = getFormData();
+                            console.log(" Update data:", data);
                             return validateEvent(data) && data;
                         }
 
                     }).then((result) => {
 
+                        console.log(" Edit result:", result);
+
                         if (result.isConfirmed) {
 
+                            console.log(" Updating event...");
+
                             postAndRefresh(
-                                '../api/events/update_event.cfm',
+                                '../api/events/Event.cfc?method=updateEvent',
                                 {
                                     id: info.event.id,
                                     ...result.value
@@ -363,9 +409,13 @@ function postAndRefresh(url, data, msg) {
 
                         else if (result.isDenied) {
 
-                            $.post('../api/events/delete_event.cfm', {
+                            console.log(" Deleting event...");
+
+                            $.post('../api/events/event.cfc?method=deleteEvent', {
                                 id: info.event.id
                             }, function () {
+
+                                console.log(" Deleted");
                                 Swal.fire('Deleted!');
                                 calendar.refetchEvents();
                             });
@@ -379,10 +429,15 @@ function postAndRefresh(url, data, msg) {
 
         eventDrop: function (info) {
 
+            console.log(" eventDrop:", info.event.id);
+
             const eventType = info.event.extendedProps?.event_type;
             const createdBy = info.event.extendedProps?.created_by;
 
+            console.log(" Drop type:", eventType, "createdBy:", createdBy);
+
             if (eventType !== 'admin' && createdBy != currentUserId) {
+                console.log(" Drop blocked");
                 info.revert();
                 return;
             }
@@ -393,12 +448,16 @@ function postAndRefresh(url, data, msg) {
                 ? formatDate(new Date(info.event.end.getTime() - 86400000))
                 : start;
 
-            $.post('../api/events/update_event.cfm', {
+            console.log(" Drop dates:", { start, end });
+
+            $.post('../api/events/event.cfc?method=updateEvent', {
                 id: info.event.id,
                 title: info.event.title,
                 start: start,
                 end: end
             }).done(() => {
+
+                console.log(" Drop updated");
 
                 Swal.fire({
                     toast: true,
@@ -408,10 +467,15 @@ function postAndRefresh(url, data, msg) {
                     showConfirmButton: false
                 });
 
-            }).fail(() => info.revert());
+            }).fail((err) => {
+                console.log(" Drop failed:", err);
+                info.revert();
+            });
         },
 
         eventResize: function (info) {
+
+            console.log(" eventResize:", info.event.id);
 
             let start = formatDate(info.event.start);
 
@@ -419,15 +483,19 @@ function postAndRefresh(url, data, msg) {
                 ? formatDate(new Date(info.event.end.getTime() - 86400000))
                 : start;
 
-            $.post('../api/events/update_event.cfm', {
+            console.log(" Resize dates:", { start, end });
+
+            $.post('../api/events/event.cfc?method=updateEvent', {
                 id: info.event.id,
                 title: info.event.title,
                 start: start,
                 end: end
             });
+
         }
 
     });
 
+    console.log(" Rendering calendar...");
     calendar.render();
 });

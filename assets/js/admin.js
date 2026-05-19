@@ -905,7 +905,7 @@ console.log("SELECTED VALUE:", $("#assignTaskUser").val());
         return;
     }
 
-    $.post("../api/projects/add_task_to_project.cfm", {
+    $.post("../api/projects/projects.cfc?method=addTask", {
     project_id: projectId,
     task: task,
     assigned_user_id: userId
@@ -956,8 +956,8 @@ window.saveProjectTask = function (projectId) {
     }
 
     let url = window.editingTaskId
-        ? "../api/projects/update_project_task.cfm"
-        : "../api/projects/add_task_to_project.cfm";
+        ? "../api/projects/projects.cfc?method=updateTask"
+        : "../api/projects/projects.cfc?method=addTask";
 
     let payload = {
         project_id: projectId,
@@ -996,24 +996,6 @@ window.saveProjectTask = function (projectId) {
     }, "json");
 };
 
-// window.loadTaskUsersDropdown = function () {
-
-//     $.get("../api/users/users.cfc?method=getAll", function (users) {
-
-//         let options = `<option value="">Assign to User</option>`;
-
-//         users.forEach(u => {
-
-//             // skip admin
-//             if (u.ROLE === "admin") return;
-
-//             options += `<option value="${u.ID}">${u.NAME}</option>`;
-//         });
-
-//         $("#assignTaskUser").html(options);
-
-//     }, "json");
-// };
 
 window.editProject = function (id) {
 
@@ -1061,7 +1043,7 @@ window.deleteProjectTask = function (id) {
 
         if (result.isConfirmed) {
 
-            $.post("../api/projects/projects.cfc?method=delete", {
+            $.post("../api/projects/projects.cfc?method=deleteTask", {
                 id: id
             }, function (res) {
 
